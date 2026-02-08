@@ -1,9 +1,9 @@
 // **************************************************************************
 // LOCALHOST
-@url = http://localhost:3000
+//@url = http://localhost:3000
 
 // RENDER
-//@url = https://cse341-inventory-project.onrender.com/api-docs/
+@url = https://cse341-inventory-project.onrender.com/api-docs/
 // **************************************************************************
 
 // 1. GET all items
