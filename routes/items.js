@@ -4,6 +4,35 @@ const Item = require('../models/Item');
 
 /**
  * @swagger
+ *  components:
+ *    schemas:
+ *      Item:
+ *       type: object
+ *       required:
+ *         - name
+ *         - category
+ *      properties:
+ *        id:
+ *          type: string
+ *          description: The auto-generated id of the item
+ *        name:
+ *          type: string
+ *          description: The name of the item
+ *        quantity:
+ *          type: number
+ *          description: The quantity of the item
+ *        category:
+ *          type: string
+ *          description: The category of the item
+ *        example:
+ *          name: Gaming Keyboard
+ *          quantity: 12
+ *          category: Electronics
+ */
+
+ // GET ALL
+/**
+ * @swagger
  * /api/items:
  *   get:
  *     summary: Get all items
@@ -21,6 +50,7 @@ router.get('/', async (req, res) => {
     }
 });
 
+// CREATE NEW ITEM
 /**
  * @swagger
  * /api/items:
@@ -61,7 +91,32 @@ router.post('/', async (req, res) => {
     }
 });
 
-// 2. GET SINGLE ITEM BY ID
+// GET SINGLE ITEM BY ID
+
+/**
+* @swagger
+* /api/items/{id}:
+*  get:
+*    summary: Get a single item by ID
+*    tags: [Items]
+*    parameters:
+*      - in: path
+*        name: id
+*        schema:
+*          type: string
+*        required: true
+*        description: The item ID
+*    responses:
+*      200:
+*        description: The item description by id
+*        content:
+*          application/json:
+*            schema:
+*              $ref: '#/components/schemas/Item'
+*      404:
+*        description: Item not found
+*/
+
 router.get('/:id', async (req, res) => {
     try {
         const item = await Item.findById(req.params.id);
@@ -77,7 +132,38 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// 3. UPDATE ITEM
+// UPDATE ITEM
+
+/**
+ * @swagger
+ * /api/items/{id}:
+ *   put:
+ *    summary: Update an item
+ *    tags: [Items]
+ *    parameters:
+ *      - in: path
+ *        name: id
+ *        schema:
+ *          type: string
+ *        required: true
+ *        description: The item ID
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            $ref: '#/components/schemas/Item'
+ *    responses:
+ *      200:
+ *        description: The item was updated
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/components/schemas/Item'
+ *      404:
+ *        description: Item not found      
+ */
+
 router.put('/:id', async (req, res) => {
     try {
         const updatedItem = await Item.findByIdAndUpdate(
@@ -95,7 +181,28 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// 4. DELETE ITEM
+// DELETE ITEM
+
+/**
+ * @swagger
+ * /api/items/{id}:
+ *   delete:
+ *     summary: Delete an item
+ *     tags: [Items]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The item ID
+ *     responses:
+ *       200:
+ *         description: The item was deleted
+ *       404:
+ *         description: Item not found
+ */
+
 router.delete('/:id', async (req, res) => {
     try {
         const item = await Item.findByIdAndDelete(req.params.id);

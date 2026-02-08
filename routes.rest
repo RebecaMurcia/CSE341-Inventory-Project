@@ -2,8 +2,8 @@
 // LOCALHOST
 @url = http://localhost:3000
 
-// RENDER (Uncomment the line below to test live deployment)
-// @url = https://<YOUR-RENDER-APP-NAME>.onrender.com
+// RENDER
+//@url = https://cse341-inventory-project.onrender.com/api-docs/
 // **************************************************************************
 
 // 1. GET all items
