@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Item = require('../models/Item');
+const { validateItem, validateItemUpdate, validateId } = require('../middleware/validation'); 
 
 /**
  * @swagger
@@ -34,19 +35,27 @@ const Item = require('../models/Item');
 /**
  * @swagger
  * /api/items:
- *   get:
- *     summary: Get all items
- *     description: Retrieve a list of all items from the database
- *     responses:
- *       200:
- *         description: Success
+ *  get:
+ *    summary: Get all items
+ *    tags: [Items]
+ *    responses:
+ *      200:
+ *        description: Success
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: array
+ *              items:
+ *                $ref: '#/components/schemas/Item'
+ *      500:                      
+ *        description: Server error
  */
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
     try {
         const items = await Item.find().sort({ createdAt: -1 });
         res.json(items);
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        next(err);
     }
 });
 
@@ -56,38 +65,33 @@ router.get('/', async (req, res) => {
  * /api/items:
  *  post:
  *    summary: Create a new item
+ *    tags: [Items]
  *    requestBody:
  *      required: true
  *      content:
  *        application/json:
  *          schema:
- *            type: object
- *            required:
- *              - name
- *            properties:
- *              name:
- *                type: string
- *              quantity:
- *                type: integer
- *              category:
- *                type: string
+ *            $ref: '#/components/schemas/Item'
  *    responses:
  *      201:
- *        description: Created
+ *        description: The item was successfully created
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/components/schemas/Item'
+ *      400:
+ *        description: Validation error (Missing fields or wrong type)
+ *      500:
+ *        description: Server error
  */
 
-router.post('/', async (req, res) => {
-    const newItem = new Item({
-        name: req.body.name,
-        quantity: req.body.quantity,
-        category: req.body.category
-    });
-
+router.post('/', validateItem, async (req, res, next) => {
     try {
+        const newItem = new Item(req.body);
         const savedItem = await newItem.save();
         res.status(201).json(savedItem);
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        next(err);
     }
 });
 
@@ -113,22 +117,25 @@ router.post('/', async (req, res) => {
 *          application/json:
 *            schema:
 *              $ref: '#/components/schemas/Item'
+*      400:
+*        description: Invalid ID format
 *      404:
 *        description: Item not found
+*      500:
+*        description: Server error
 */
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateId, async (req, res, next) => {
     try {
         const item = await Item.findById(req.params.id);
         if (!item) {
-            return res.status(404).json({ message: 'Item not found' });
+            const error = new Error('Item not found');
+            error.statusCode = 404;
+            return next(error);
         }
         res.json(item);
     } catch (err) {
-        if (err.kind === 'ObjectId') {
-             return res.status(404).json({ message: 'Item not found' });
-        }
-        res.status(500).json({ message: err.message });
+        next(err);
     }
 });
 
@@ -154,17 +161,17 @@ router.get('/:id', async (req, res) => {
  *          schema:
  *            $ref: '#/components/schemas/Item'
  *    responses:
- *      200:
- *        description: The item was updated
- *        content:
- *          application/json:
- *            schema:
- *              $ref: '#/components/schemas/Item'
+ *      204:
+ *        description: Item updated successfully
+ *      400:
+ *        description: Validation error or invalid ID
  *      404:
- *        description: Item not found      
+ *        description: Item not found
+ *      500:
+ *        description: Server error      
  */
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', [validateId, validateItemUpdate], async (req, res, next) => {
     try {
         const updatedItem = await Item.findByIdAndUpdate(
             req.params.id, 
@@ -172,12 +179,14 @@ router.put('/:id', async (req, res) => {
             { new: true, runValidators: true }
         );
 
-        if (!updatedItem) {
-            return res.status(404).json({ message: 'Item not found' });
+       if (!updatedItem) {
+            const error = new Error('Item not found');
+            error.statusCode = 404;
+            return next(error);
         }
-        res.json(updatedItem);
+        res.status(204).send();
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        next(err);
     }
 });
 
@@ -199,20 +208,25 @@ router.put('/:id', async (req, res) => {
  *     responses:
  *       200:
  *         description: The item was deleted
+ *       400:
+ *         description: Invalid ID format
  *       404:
  *         description: Item not found
+ *       500:
+ *         description: Server error
  */
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', validateId, async (req, res, next) => {
     try {
         const item = await Item.findByIdAndDelete(req.params.id);
-        
         if (!item) {
-            return res.status(404).json({ message: 'Item not found' });
+            const error = new Error('Item not found');
+            error.statusCode = 404;
+            return next(error);
         }
         res.json({ message: 'Item deleted successfully' });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        next(err);
     }
 });
 

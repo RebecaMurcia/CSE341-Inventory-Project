@@ -40,9 +40,13 @@ app.use(express.json());
 
 // Import Routes
 const itemsRouter = require('./routes/items');
+const errorHandler = require('./middleware/error');
 
 // Use Routes
 app.use('/api/items', itemsRouter); 
+app.use('/api/items', require('./routes/items'));
+
+app.use(errorHandler);
 
 // ... app.listen code ...
 

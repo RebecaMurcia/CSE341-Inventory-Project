@@ -21,22 +21,22 @@ POST {{url}}/api/items
 Content-Type: application/json
 
 {
-    "name": "Oatmeal",
-    "quantity": 150,
-    "category": "Groceries"
+    "name": "digital camera",
+    "quantity": 100,
+    "category": "Electronics"
 }
 
 ###
 
 // 4. PUT update item (Replace ID)
-PUT {{url}}/api/items/69882381adce4371528802ce
+PUT {{url}}/api/items/6990b6cf6d0ee706cc698e71
 Content-Type: application/json
 
 {
-    "quantity": 20
+    "name": ""
 }
 
 ###
 
 // 5. DELETE item (Replace ID)
-DELETE {{url}}/api/items/6988284f7d90236d0192b032
+DELETE {{url}}/api/items/6990b5696d0ee706cc698e6e
