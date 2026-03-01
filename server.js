@@ -2,6 +2,8 @@
 require('dotenv').config();
 const express = require('express');
 const connectDB = require('./config/db');
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsDoc = require('swagger-jsdoc');
 const session = require('express-session');
 const passport = require('passport');
 const GitHubStrategy = require('passport-github2').Strategy;
@@ -15,23 +17,21 @@ const app = express();
 // Connect to Database
 connectDB();
 
-// Swagger
-const swaggerUi = require('swagger-ui-express');
-const swaggerJsDoc = require('swagger-jsdoc');
-
 // Swagger Configuration
 const swaggerOptions = {
     definition: {
         openapi: '3.0.0',
         info: {
-            title: 'Inventory API',
+            title: 'Inventory Management API', 
             version: '1.0.0',
             description: 'API for managing warehouse inventory',
             contact: {
                 name: 'Your Name'
-            },
-            servers: [
-              {
+            }
+        }, 
+        
+        servers: [
+            {
                 url: 'https://cse341-inventory-project.onrender.com', 
                 description: 'Production Server (Render)'
             },
@@ -39,10 +39,8 @@ const swaggerOptions = {
                 url: 'http://localhost:3000',
                 description: 'Local Development Server'
             }
-              ]
-        }
+        ]
     },
-    
     apis: ['./routes/*.js'] 
 };
 
