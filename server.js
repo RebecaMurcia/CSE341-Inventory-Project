@@ -5,6 +5,10 @@ const connectDB = require('./config/db');
 const session = require('express-session');
 const passport = require('passport');
 const GitHubStrategy = require('passport-github2').Strategy;
+const { isAuthenticated } = require('./middleware/auth');
+const LocalStrategy = require('passport-local').Strategy;
+const bcrypt = require('bcryptjs');
+const User = require('./models/User');
 
 const app = express();
 
@@ -26,7 +30,16 @@ const swaggerOptions = {
             contact: {
                 name: 'Your Name'
             },
-            servers: [{ url: 'http://localhost:3000' }]
+            servers: [
+              {
+                url: 'https://cse341-inventory-project.onrender.com', 
+                description: 'Production Server (Render)'
+            },
+            {
+                url: 'http://localhost:3000',
+                description: 'Local Development Server'
+            }
+              ]
         }
     },
     
@@ -70,6 +83,28 @@ passport.deserializeUser((user, done) => {
     done(null, user);
 });
 
+// Configure local strategy (Username & Password)
+passport.use(new LocalStrategy(
+  async (username, password, done) => {
+    try {
+
+      const user = await User.findOne({ username: username });
+      if (!user) {
+        return done(null, false, { message: 'Incorrect username.' });
+      }
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return done(null, false, { message: 'Incorrect password.' });
+      }
+
+      return done(null, user);
+    } catch (err) {
+      return done(err);
+    }
+  }
+));
+
 // Import Routes
 const itemsRouter = require('./routes/items');
 const errorHandler = require('./middleware/error');
@@ -95,6 +130,19 @@ app.get('/logout', (req, res, next) => {
     });
 });
 
+// Protected Profile Route 
+app.get('/profile', isAuthenticated, (req, res) => {
+    res.json({
+        success: true,
+        message: "You are viewing a protected route. This is only visible to logged-in users!",
+        user: {
+            username: req.session.user.username,
+            name: req.session.user.displayName,
+            githubId: req.session.user.id
+        }
+    });
+});
+
 // Authentication Route - Status Route
 app.get('/auth/status', (req, res) => {
     res.json(req.session.user !== undefined ? { loggedIn: true, user: req.session.user } : { loggedIn: false });
@@ -104,6 +152,7 @@ app.get('/auth/status', (req, res) => {
 // Use Routes
 app.use('/api/items', itemsRouter); 
 app.use('/api/items', require('./routes/items'));
+app.use('/api/auth', require('./routes/auth'));
 
 app.use(errorHandler);
 

@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Item = require('../models/Item');
 const { validateItem, validateItemUpdate, validateId } = require('../middleware/validation'); 
+const { isAuthenticated } = require('../middleware/auth');
+
 
 /**
  * @swagger
@@ -81,11 +83,13 @@ router.get('/', async (req, res, next) => {
  *              $ref: '#/components/schemas/Item'
  *      400:
  *        description: Validation error (Missing fields or wrong type)
+ *      401:
+ *        description: Unauthorized (You must be logged in) 
  *      500:
  *        description: Server error
  */
 
-router.post('/', validateItem, async (req, res, next) => {
+router.post('/', [isAuthenticated, validateItem], async (req, res, next) => {
     try {
         const newItem = new Item(req.body);
         const savedItem = await newItem.save();
@@ -165,13 +169,15 @@ router.get('/:id', validateId, async (req, res, next) => {
  *        description: Item updated successfully
  *      400:
  *        description: Validation error or invalid ID
+ *      401:
+ *        description: Unauthorized (You must be logged in)
  *      404:
  *        description: Item not found
  *      500:
  *        description: Server error      
  */
 
-router.put('/:id', [validateId, validateItemUpdate], async (req, res, next) => {
+router.put('/:id', [isAuthenticated, validateId, validateItemUpdate], async (req, res, next) => {
     try {
         const updatedItem = await Item.findByIdAndUpdate(
             req.params.id, 
@@ -210,13 +216,15 @@ router.put('/:id', [validateId, validateItemUpdate], async (req, res, next) => {
  *         description: The item was deleted
  *       400:
  *         description: Invalid ID format
+ *       401:
+ *         description: Unauthorized (You must be logged in)
  *       404:
  *         description: Item not found
  *       500:
  *         description: Server error
  */
 
-router.delete('/:id', validateId, async (req, res, next) => {
+router.delete('/:id', [isAuthenticated, validateId], async (req, res, next) => {
     try {
         const item = await Item.findByIdAndDelete(req.params.id);
         if (!item) {
